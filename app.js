@@ -18,38 +18,38 @@ app.get("/images", (req, res) => {
   });
 
   const s3 = new aws.S3();
-  let imageData = [];
+  let imageNames = [
+    "12.png",
+    "christ.jpg",
+    "devotion.jpg",
+    "don.jpeg",
+    "either.jpeg",
+    "god.png",
+    "midnight.jpeg",
+    "selfish.jpg",
+    "soa.jpeg",
+    "stranger.jpeg",
+    "war.jpeg",
+    "zen.jpeg",
+  ];
 
-  async function getBookNames() {
-    const response = await s3
-      .listObjectsV2({
-        Bucket: "bookstore-jntu",
-      })
-      .promise();
-    return response;
-  }
+  const getImages = async (imageNames) => {
+    let imageData = [];
+    for (let i = 0; i < imageNames.length; i++) {
+      const data = await s3
+        .getObject({
+          Bucket: "bookstore-jntu",
+          Key: imageNames[i],
+        })
+        .promise();
+      imageData.push(data);
+    }
+    return imageData;
+  };
 
-  getBookNames()
-    .then((imageNames) => {
-      let images = [];
-      for (let i = 0; i < imageNames.Contents.length; i++) {
-        images.push(imageNames.Contents[i].Key);
-      }
-      return images;
-    })
-    .then(async (imageNames) => {
-      for (let i = 0; i < imageNames.length; i++) {
-        const data = await s3
-          .getObject({
-            Bucket: "bookstore-jntu",
-            Key: imageNames[i],
-          })
-          .promise();
-        imageData.push(data);
-      }
-      return imageData;
-    })
+  getImages(imageNames)
     .then((imagesData) => {
+      console.log(imagesData);
       let encodedImageData = [];
       for (let i = 0; i < imagesData.length; i++) {
         encodedImageData.push(encode(imagesData[i].Body));
@@ -58,7 +58,7 @@ app.get("/images", (req, res) => {
       res.send(encodedImageData);
     })
     .catch((e) => {
-      res.send(e);
+      console.log(e);
     });
 
   function encode(data) {
